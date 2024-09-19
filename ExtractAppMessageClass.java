@@ -78,11 +78,21 @@ public class ExtractAppMessageClass {
     }
 
     public void logWarningMessage(String errorMessage, String errorLogFileName) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(errorLogFileName, true))) {
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(errorLogFileName, true));
             writer.write(errorMessage);
             writer.newLine();
         } catch (IOException e) {
             System.err.println("Cannot open log file: " + errorLogFileName);
+        } finally {
+            try {
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException e) {
+                System.err.println("Error closing log file: " + errorLogFileName);
+            }
         }
     }
 

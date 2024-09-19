@@ -1,7 +1,5 @@
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class ExtractAllAppInFolder {
 
@@ -45,20 +43,27 @@ public class ExtractAllAppInFolder {
     }
 
     public static int getFileCountInOutputDirectory(String outDirPath, String folderName) {
-        String outFileDirectory = outDirPath + "/" + folderName;
-        try (Stream<Path> files = Files.list(Paths.get(outFileDirectory))) {
-            return (int) files.filter(path -> path.getFileName().toString().contains("_input")).count();
-        } catch (IOException e) {
-            System.err.println("Error reading directory: " + outFileDirectory);
-            return 0;
+        File outFileDirectory = new File(outDirPath + "/" + folderName);
+        File[] files = outFileDirectory.listFiles();
+
+        int count = 0;
+        if (files != null) {
+            for (File file : files) {
+                if (file.getName().contains("_input")) {
+                    count++;
+                }
+            }
         }
+        return count;
     }
 
     public static Map<String, String> readConfigFile() {
         String configFileName = "Config.properties";
         Map<String, String> configHash = new HashMap<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(configFileName))) {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(configFileName));
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.replaceAll("\r|\n", "").replaceAll("#.*", "").trim();
@@ -71,6 +76,14 @@ public class ExtractAllAppInFolder {
             }
         } catch (IOException e) {
             System.err.println("Config file not found: " + configFileName);
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                System.err.println("Error closing config file: " + configFileName);
+            }
         }
 
         return configHash;
